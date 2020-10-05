@@ -1,0 +1,6 @@
+# für die Weiterleitung der alten URL untis.szut.de/untis_conf.py zur neuen Seite
+# auf demosios unter untisconv.szut.de/untis_bottle 
+RewriteEngine On
+RewriteCond %{SERVER_NAME} =untis.szut.de
+RewriteCond %{REQUEST_URI} ^/untisconv.py
+RewriteRule ^ https://untisconv.szut.de/untis_bottle [QSA,END,NE,R=permanent]
