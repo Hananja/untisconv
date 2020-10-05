@@ -1,6 +1,6 @@
 # untisconv
 
-Small bottle service to convert [WebUntis](webuntis.com) icalendar exports for [szut](szut.de).
+Small bottle service to convert [WebUntis](https://webuntis.com) icalendar exports for [szut](https://szut.de).
 
 ## Usage
 
