@@ -11,15 +11,20 @@ src_url = "https://cissa.webuntis.com/WebUntis/Ical.do?school=%s&id=%s&token=%s"
 cohort_class_map = {c: 1 for c in ["BOTENA", "CTA19", "CTA20", "CT19", "CT20", "DQM18", "DQM19", "DQM20",
                                    "I20", "MA19", "MA20", "N20", "OPT18", "OPT19A", "OPT19B", "OPT20A", "OPT20B",
                                    "PHY19", "PHY20", "ST18A", "ST18B", "ST19B", "ST19C", "ST19A", "ST20A", "ST20B",
-                                   "PTA19", "PTA20A", "PTA20B"]}
+                                   "PTA19", "PTA20A", "PTA20B", "CTA21", "DQM21", "I21", "MA21", "N21", "OPT21", 
+                                   "PHY21", "ST21A", "ST21B", "ST21C", "PTA21A", "PTA21B" ]}
 cohort_class_map.update(
     {c: 2 for c in ["DQI17", "DQI18", "DQI19", "DQI20", "DSIH18", "DSIH19A", "DSIH19B", "DSIH20A", "DSIH20B",
                     "DSIU18", "DSIU19", "DSIU20", 'FA18A', 'FA18B', 'FA18C', 'FA18D', 'FA19A', 'FA19B', 'FA19C',
                     'FA19D', 'FA20A', 'FA20B', 'FA20C', 'FA20D', "FS18A", "FS18B", "FS18C", "FS19A", "FS19B", "FS19C",
-                    "FSE19D", "FS20A", "FS20B", "FS20C", "FS20D", "FSE20", "KIDM20", "SIK18", "SIK19", "W20A", "W20B"]})
+                    "FSE19D", "FS20A", "FS20B", "FS20C", "FS20D", "FSE20", "KIDM20", "SIK18", "SIK19", "W20A", "W20B",
+                    "DQI21", "DSIH21", "DSIU21", "FA21A", "FA21B", "FA21C", "FA21D", 
+                    "FS21A", "FS21B", "FS21C", "FS21D", "FSE21", "KIDM21", "W21A", "W21B" ]})
 cohort_class_map.update({c: 3 for c in ["BLLAB18", "BLLAB19", "BLLAB20", "BOT20", "BOW20", "BTA19", "BTA20",
                                         "DQF17", "DQF18", "DQF19", "DQF20", "F19", "F20", "FAMI18", "FAMI19", "FAMI20",
-                                        "ITA19", "ITA20", "IV19", "IV20", "LAB18", "LAB19", "LAB20"]})
+                                        "ITA19", "ITA20", "IV19", "IV20", "LAB18", "LAB19", "LAB20",
+                                        "BLLAB21", "BOT21", "BOW21", "BTA21", "DQF21", "F21", "FAMI21", "ITA21", 
+                                        "IV21", "LAB21" ]})
 cohort_minutes_map = {1: -15, 2: 0, 3: +15}
 
 tz = tzlocal.get_localzone()
