@@ -91,7 +91,11 @@ def get_cohort_offset(classname, dtstamp):
         offset += cohort_minutes_map[cohort_class_map[classname]]
         logging.debug("add cohort offset for %s (%02d:%02d): %3d" % (classname, dtstamp.hour, dtstamp.minute, offset))
 
-    for t in [(9, 40), (11, 25), (13, 10),  (14, 50), (14, 50)]:  # , (16, 35), (16, 35), (18, 15), (18, 15)]:
+    """ shorten the first 3 breaks by 5 minutes each,
+        after that the Untis schedule is off the intended original plan:
+         - the break between 8th and 9th is 10 min too long
+         - the break between 10th and 11th is also 10 min too long """
+    for t in [(10, 0), (11, 50), (13, 40), (15, 30), (15, 30), (17, 20), (17, 20)]:
         if dtstamp.time() >= datetime.time(*t, tzinfo=tz):
             offset -= 5
             logging.debug("add offset for %s (%04d-%02d-%02d) (%02d:%02d > %02d:%02d): -5" %
