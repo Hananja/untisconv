@@ -1,4 +1,5 @@
-from bottle import run
+import bottle
+bottle.debug(True)
 from untis_bottle import app
 
-run(app=app, debug=True)
+bottle.run(app=app, debug=True)

@@ -1,12 +1,19 @@
 import datetime
+import time
+from typing import List, Union
 
+from requests.exceptions import ConnectionError
 import requests
 import tzlocal
 from bottle import Bottle, request, response, DEBUG, abort
 import logging
 from icalendar import Calendar, vDatetime
 
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)
+
 src_url = "https://cissa.webuntis.com/WebUntis/Ical.do?school=%s&id=%s&token=%s"
+
+retry_counter = 10
 
 cohort_class_map = {c: 1 for c in ["BOTENA", "CTA19", "CTA20", "CT19", "CT20", "DQM18", "DQM19", "DQM20",
                                    "I20", "MA19", "MA20", "N20", "OPT18", "OPT19A", "OPT19B", "OPT20A", "OPT20B",
@@ -28,9 +35,28 @@ cohort_class_map.update({c: 3 for c in ["BLLAB18", "BLLAB19", "BLLAB20", "BOT20"
 cohort_minutes_map = {1: -15, 2: 0, 3: +15}
 
 tz = tzlocal.get_localzone()
+encoding = "utf-8"
 app = Bottle()
 
-logging.basicConfig(level=logging.WARNING)
+
+def sanitize(item: Union[List[bytes], bytes, str]) -> str:
+    """ contert list to string or return string
+
+        remove duplicates and join, use utf-8
+    """
+    if isinstance(item, list):
+        old_element = None
+        result = []
+        for element in item:
+            if element != old_element:
+                result += [element.decode(encoding)]
+                old_element = element
+        return " ".join(result)  # remove dupes and convert to string
+    else:
+        if isinstance(item, str):
+            return item
+        else:
+            return item.decode(encoding)
 
 def strftime(dto):
     """convert datetime object to localized string format"""
@@ -40,13 +66,14 @@ def corrected_events(cal_in: Calendar):
     ''' build event summary and remove unwanted fields (in place) and collect events in list '''
     events = []
     for event in cal_in.subcomponents:
-        logging.debug("description: %s" % event.decoded('description'))
         if 'description' in event:
-            classname = event['description'].split()[0]
+            description = sanitize(event.decoded('description'))
+            logging.debug("description: %s" % description)
+            classname = description.split()[0]
         else:  # tritt bei Hofpausen auf (FIXME: vernuenftige Erkennung?)
             classname = "-"
-        location = event.get('location', 'unbekannt')
-        subject = event.get('summary', 'unbekannt')
+        location = sanitize(event.decoded('location', 'unbekannt'))
+        subject = sanitize(event.decoded('summary', 'unbekannt'))
         event.classname = classname  # FIXME: too dirty
 
         try:
@@ -55,6 +82,7 @@ def corrected_events(cal_in: Calendar):
         except KeyError:
             pass  # ignore
         event['summary'] = "%s %s (%s)" % (classname, subject, location)
+        logging.debug(f"resulting summary: {event['summary']}")
         events.append(event)
     return events
 
@@ -111,9 +139,13 @@ def get_cohort_offset(classname, dtstamp):
 
 def cohort_correced(events):
     times_fields = ('DTSTART', 'DTEND')
+    cohort_end_date = datetime.date(2022,4,19)
     for event in events:
         times_orig = [event.decoded(i) for i in times_fields]
-        offset = get_cohort_offset(event.classname, times_orig[0].astimezone(tzlocal.get_localzone()))
+        if times_orig[1].date() < cohort_end_date:
+            offset = get_cohort_offset(event.classname, times_orig[0].astimezone(tzlocal.get_localzone()))
+        else:
+            offset = 0
         times_cohort = [t + datetime.timedelta(minutes=offset) for t in times_orig]
         for i, t in zip(times_fields, times_cohort):
             event[i] = vDatetime(t).to_ical().decode()
@@ -137,9 +169,22 @@ def untisconv():
         abort(510, "invalid query")
 
     # fetch from untis
-    cal_in = Calendar.from_ical(requests.get(src_url % (school, userid, token)).text)
+    url = src_url % (school, userid, token)
+    logging.debug(url)
+    ret_cnt = retry_counter
+    while ret_cnt > 0:
+        ret_cnt -= 1 # consume one
+        try:
+            cal_in = Calendar.from_ical(requests.get(url).text)
+            break
+        except (ConnectionResetError, ConnectionError) as e:
+            logging.warning(f"try {retry_counter-ret_cnt}: {e}")
+            if ret_cnt == 0:
+                response.status_code = 500
+                return ''
+        time.sleep(0.2)
     events = join_events(corrected_events(cal_in))
-    events = cohort_correced(events)
+    # events = cohort_correced(events) # disabled
 
     # initialize new calendar
     cal_out = Calendar()
